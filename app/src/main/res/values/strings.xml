@@ -10,4 +10,8 @@
     <string name="battery_dialog_positive">Άνοιγμα ρυθμίσεων</string>
     <string name="battery_dialog_negative">Παράλειψη</string>
     <string name="permission_denied_message">Χωρίς άδεια τοποθεσίας, το Ride Mode δεν μπορεί να στείλει στίγμα.</string>
+    <string name="tracking_notification_title">EasyRide — Ride Mode ενεργό</string>
+    <string name="tracking_notification_text">Το στίγμα σου μεταδίδεται. Πάτα Διακοπή για να σταματήσει.</string>
+    <string name="tracking_notification_stop">Διακοπή</string>
+    <string name="tracking_channel_name">Ride Mode Παρακολούθηση</string>
 </resources>

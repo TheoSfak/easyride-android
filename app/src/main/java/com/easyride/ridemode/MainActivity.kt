@@ -185,16 +185,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchTrackingService() {
-        Toast.makeText(
-            this,
-            "Would start service now for mission=$pendingMissionId shift=$pendingShiftId",
-            Toast.LENGTH_LONG
-        ).show()
+        val intent = Intent(this, RideTrackingService::class.java).apply {
+            putExtra(RideTrackingService.EXTRA_MISSION_ID, pendingMissionId)
+            putExtra(RideTrackingService.EXTRA_SHIFT_ID, pendingShiftId)
+            putExtra(RideTrackingService.EXTRA_CSRF_TOKEN, pendingCsrfToken)
+            putExtra(RideTrackingService.EXTRA_BASE_URL, resolvedBaseUrl)
+        }
+        ContextCompat.startForegroundService(this, intent)
         trackingFlowInProgress = false
     }
 
     fun stopTrackingService() {
-        Toast.makeText(this, "Bridge: stop tracking", Toast.LENGTH_LONG).show()
+        val intent = Intent(this, RideTrackingService::class.java).apply {
+            action = RideTrackingService.ACTION_STOP
+        }
+        startService(intent)
     }
 
     private fun showPermissionDeniedMessage() {
