@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 resolvedBaseUrl = url
                 setUpWebViewClient(url)
+                webView.addJavascriptInterface(RideBridge(this@MainActivity), "AndroidRideBridge")
                 webView.loadUrl("$url/login.php")
                 loadingSpinner.visibility = View.GONE
             }
@@ -85,5 +86,17 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         CookieManager.getInstance().flush()
+    }
+
+    fun beginTrackingFlow(missionId: String, shiftId: String, csrfToken: String) {
+        android.widget.Toast.makeText(
+            this,
+            "Bridge: start tracking mission=$missionId shift=$shiftId",
+            android.widget.Toast.LENGTH_LONG
+        ).show()
+    }
+
+    fun stopTrackingService() {
+        android.widget.Toast.makeText(this, "Bridge: stop tracking", android.widget.Toast.LENGTH_LONG).show()
     }
 }
