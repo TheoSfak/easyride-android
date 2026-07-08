@@ -142,6 +142,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(R.string.background_location_dialog_title)
             .setMessage(R.string.background_location_dialog_message)
+            .setCancelable(false)
             .setPositiveButton(R.string.background_location_dialog_positive) { _, _ ->
                 backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             }
@@ -171,6 +172,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(R.string.battery_dialog_title)
             .setMessage(R.string.battery_dialog_message)
+            .setCancelable(false)
             .setPositiveButton(R.string.battery_dialog_positive) { _, _ ->
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                     data = Uri.parse("package:$packageName")
