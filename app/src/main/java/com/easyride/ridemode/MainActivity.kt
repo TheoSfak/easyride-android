@@ -12,6 +12,8 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
 import android.webkit.CookieManager
+import android.webkit.GeolocationPermissions
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -62,6 +64,8 @@ class MainActivity : AppCompatActivity() {
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        @Suppress("DEPRECATION")
+        webView.settings.setGeolocationEnabled(true)
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -89,6 +93,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 resolvedBaseUrl = url
                 setUpWebViewClient(url)
+                setUpWebChromeClient()
                 webView.addJavascriptInterface(RideBridge(this@MainActivity), "AndroidRideBridge")
                 webView.loadUrl("$url/login.php")
                 loadingSpinner.visibility = View.GONE
@@ -117,6 +122,26 @@ class MainActivity : AppCompatActivity() {
                 if (url != null && Uri.parse(url).path?.endsWith("/dashboard.php") == true) {
                     view.loadUrl("$baseUrl/my-participations.php")
                 }
+            }
+        }
+    }
+
+    private fun setUpWebChromeClient() {
+        // WebView denies every page's navigator.geolocation call by default —
+        // silently and instantly, with no prompt — unless a WebChromeClient
+        // explicitly grants it here. This governs ride-mode.php's own
+        // browser-side watchPosition() call (used to draw the self marker on
+        // the map); it's separate from, and in addition to, the native
+        // ACCESS_FINE_LOCATION permission the tracking-start flow requests.
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String,
+                callback: GeolocationPermissions.Callback
+            ) {
+                val hasFineLocation = ContextCompat.checkSelfPermission(
+                    this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                callback.invoke(origin, hasFineLocation, false)
             }
         }
     }

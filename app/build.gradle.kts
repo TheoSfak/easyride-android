@@ -20,8 +20,8 @@ android {
         applicationId = "com.easyride.ridemode"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
 
         buildConfigField("String", "BOOTSTRAP_BASE_URL", "\"https://theeasyride.eu\"")
         buildConfigField("String", "SERVER_CONFIG_URL", "\"https://raw.githubusercontent.com/TheoSfak/easyride-android/main/server-config.json\"")
