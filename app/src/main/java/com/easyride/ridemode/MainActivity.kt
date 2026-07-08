@@ -108,6 +108,16 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
             }
+
+            override fun onPageFinished(view: WebView, url: String?) {
+                super.onPageFinished(view, url)
+                // login.php always redirects to dashboard.php (no redirect-target
+                // param exists server-side) — this app is scoped to Ride Mode only,
+                // so bounce straight past the dashboard to the rides list instead.
+                if (url != null && Uri.parse(url).path?.endsWith("/dashboard.php") == true) {
+                    view.loadUrl("$baseUrl/my-participations.php")
+                }
+            }
         }
     }
 
