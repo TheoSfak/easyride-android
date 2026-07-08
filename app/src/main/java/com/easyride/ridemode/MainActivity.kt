@@ -67,6 +67,15 @@ class MainActivity : AppCompatActivity() {
         @Suppress("DEPRECATION")
         webView.settings.setGeolocationEnabled(true)
 
+        // WebView has no built-in download handling — an <a download> link
+        // (e.g. the site's own APK download link) silently does nothing
+        // unless a DownloadListener is set. Hand it off to the system
+        // browser, which already knows how to download + offer to install
+        // an .apk.
+        webView.setDownloadListener { url, _, _, _, _ ->
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
