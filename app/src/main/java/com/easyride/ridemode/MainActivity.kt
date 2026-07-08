@@ -50,6 +50,17 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { promptBatteryOptimizationExemption() }
 
+    private var pendingGeolocationCallback: GeolocationPermissions.Callback? = null
+    private var pendingGeolocationOrigin: String? = null
+
+    private val geolocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        pendingGeolocationOrigin?.let { origin -> pendingGeolocationCallback?.invoke(origin, granted, false) }
+        pendingGeolocationCallback = null
+        pendingGeolocationOrigin = null
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -138,10 +149,14 @@ class MainActivity : AppCompatActivity() {
     private fun setUpWebChromeClient() {
         // WebView denies every page's navigator.geolocation call by default —
         // silently and instantly, with no prompt — unless a WebChromeClient
-        // explicitly grants it here. This governs ride-mode.php's own
-        // browser-side watchPosition() call (used to draw the self marker on
-        // the map); it's separate from, and in addition to, the native
-        // ACCESS_FINE_LOCATION permission the tracking-start flow requests.
+        // explicitly grants it here. This governs ANY page's GPS use inside
+        // the WebView (ride-mode.php's own watchPosition() self-marker call,
+        // my-participations.php's standalone "Αποστολή Θέσης" button, etc.),
+        // separately from the native ACCESS_FINE_LOCATION permission Ride
+        // Mode's Start flow requests. If the native permission isn't held
+        // yet — e.g. the rider taps a GPS feature before ever using Ride
+        // Mode's Start button — request it here on demand instead of just
+        // denying, exactly like a normal browser would prompt in the moment.
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(
                 origin: String,
@@ -150,7 +165,13 @@ class MainActivity : AppCompatActivity() {
                 val hasFineLocation = ContextCompat.checkSelfPermission(
                     this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-                callback.invoke(origin, hasFineLocation, false)
+                if (hasFineLocation) {
+                    callback.invoke(origin, true, false)
+                } else {
+                    pendingGeolocationCallback = callback
+                    pendingGeolocationOrigin = origin
+                    geolocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
             }
         }
     }
