@@ -1,17 +1,26 @@
 package com.easyride.ridemode
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +28,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var loadingSpinner: ProgressBar
     private var resolvedBaseUrl: String = BuildConfig.BOOTSTRAP_BASE_URL
+
+    private var pendingMissionId: String? = null
+    private var pendingShiftId: String? = null
+    private var pendingCsrfToken: String? = null
+
+    private val fineLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) requestBackgroundLocationIfNeeded() else showPermissionDeniedMessage()
+    }
+
+    private val backgroundLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { requestNotificationPermissionIfNeeded() }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { promptBatteryOptimizationExemption() }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,20 +110,92 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        CookieManager.getInstance().flush()
+    fun beginTrackingFlow(missionId: String, shiftId: String, csrfToken: String) {
+        pendingMissionId = missionId
+        pendingShiftId = shiftId
+        pendingCsrfToken = csrfToken
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            requestBackgroundLocationIfNeeded()
+        } else {
+            fineLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
-    fun beginTrackingFlow(missionId: String, shiftId: String, csrfToken: String) {
-        android.widget.Toast.makeText(
+    private fun requestBackgroundLocationIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            requestNotificationPermissionIfNeeded()
+            return
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermissionIfNeeded()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.background_location_dialog_title)
+            .setMessage(R.string.background_location_dialog_message)
+            .setPositiveButton(R.string.background_location_dialog_positive) { _, _ ->
+                backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
+            .setNegativeButton(R.string.background_location_dialog_negative) { _, _ ->
+                requestNotificationPermissionIfNeeded()
+            }
+            .show()
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            promptBatteryOptimizationExemption()
+        }
+    }
+
+    private fun promptBatteryOptimizationExemption() {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (pm.isIgnoringBatteryOptimizations(packageName)) {
+            launchTrackingService()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.battery_dialog_title)
+            .setMessage(R.string.battery_dialog_message)
+            .setPositiveButton(R.string.battery_dialog_positive) { _, _ ->
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+                launchTrackingService()
+            }
+            .setNegativeButton(R.string.battery_dialog_negative) { _, _ -> launchTrackingService() }
+            .show()
+    }
+
+    private fun launchTrackingService() {
+        Toast.makeText(
             this,
-            "Bridge: start tracking mission=$missionId shift=$shiftId",
-            android.widget.Toast.LENGTH_LONG
+            "Would start service now for mission=$pendingMissionId shift=$pendingShiftId",
+            Toast.LENGTH_LONG
         ).show()
     }
 
     fun stopTrackingService() {
-        android.widget.Toast.makeText(this, "Bridge: stop tracking", android.widget.Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Bridge: stop tracking", Toast.LENGTH_LONG).show()
+    }
+
+    private fun showPermissionDeniedMessage() {
+        Toast.makeText(this, R.string.permission_denied_message, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        CookieManager.getInstance().flush()
     }
 }

@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">EasyRide Ride Mode</string>
+    <string name="background_location_dialog_title">Στίγμα στο παρασκήνιο</string>
+    <string name="background_location_dialog_message">Το EasyRide χρειάζεται πρόσβαση στην τοποθεσία «Πάντα» ώστε να συνεχίζει να στέλνει το στίγμα σου ακόμα κι όταν κλειδώσεις την οθόνη ή ελαχιστοποιήσεις την εφαρμογή.</string>
+    <string name="background_location_dialog_positive">Συνέχεια</string>
+    <string name="background_location_dialog_negative">Παράλειψη</string>
+    <string name="battery_dialog_title">Αξιόπιστη λειτουργία στο παρασκήνιο</string>
+    <string name="battery_dialog_message">Για να μη σταματά η μετάδοση στίγματος όταν κλειδώνεις την οθόνη, εξαίρεσε το EasyRide από την εξοικονόμηση μπαταρίας.</string>
+    <string name="battery_dialog_positive">Άνοιγμα ρυθμίσεων</string>
+    <string name="battery_dialog_negative">Παράλειψη</string>
+    <string name="permission_denied_message">Χωρίς άδεια τοποθεσίας, το Ride Mode δεν μπορεί να στείλει στίγμα.</string>
 </resources>
