@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private var pendingMissionId: String? = null
     private var pendingShiftId: String? = null
     private var pendingCsrfToken: String? = null
+    private var trackingFlowInProgress = false
 
     private val fineLocationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -111,6 +112,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun beginTrackingFlow(missionId: String, shiftId: String, csrfToken: String) {
+        if (trackingFlowInProgress) return
+        trackingFlowInProgress = true
+
         pendingMissionId = missionId
         pendingShiftId = shiftId
         pendingCsrfToken = csrfToken
@@ -184,6 +188,7 @@ class MainActivity : AppCompatActivity() {
             "Would start service now for mission=$pendingMissionId shift=$pendingShiftId",
             Toast.LENGTH_LONG
         ).show()
+        trackingFlowInProgress = false
     }
 
     fun stopTrackingService() {
@@ -192,6 +197,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPermissionDeniedMessage() {
         Toast.makeText(this, R.string.permission_denied_message, Toast.LENGTH_LONG).show()
+        trackingFlowInProgress = false
     }
 
     override fun onPause() {
