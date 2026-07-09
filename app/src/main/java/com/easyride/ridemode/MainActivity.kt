@@ -23,6 +23,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
@@ -68,6 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         loadingSpinner = findViewById(R.id.loadingSpinner)
+        applySystemBarInsets()
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -102,6 +105,16 @@ class MainActivity : AppCompatActivity() {
         )
 
         resolveBaseUrlAndLoad()
+    }
+
+    private fun applySystemBarInsets() {
+        val rootContainer = findViewById<View>(R.id.rootContainer)
+        ViewCompat.setOnApplyWindowInsetsListener(rootContainer) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.requestApplyInsets(rootContainer)
     }
 
     private fun resolveBaseUrlAndLoad() {
