@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Theme accent (colorPrimary in themes.xml) — unchanged -->
     <color name="ic_launcher_background">#DC2626</color>
+    <!-- Launcher-icon background: EasyRide brand black behind the club badge -->
+    <color name="icon_background">#141110</color>
 </resources>
